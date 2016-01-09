@@ -5,8 +5,10 @@ var io = require('socket.io')(server);
 
 // Database
 var mongo = require('mongodb');
-var monk = require('monk');
-var db = monk('localhost:27017/turbineservice');
+var MongoClient = mongo.MongoClient;
+
+// Connection URL. This is where your mongodb server is running.
+var url = 'mongodb://localhost:27017/turbineservice';
 
 app.use(express.static(__dirname + '/bower_components'));  
 app.get('/', function(req, res,next) {  
@@ -15,26 +17,23 @@ app.get('/', function(req, res,next) {
 
 server.listen(4200);
 
-io.on('connection', function(client) {  
-    console.log('Client connected...');
+  // connect to MongoDB
+  MongoClient.connect(url, function(err, db){
+    
+    db.collection('data', function(err, coll) {
 
-    client.on('join', function(data) {
-        console.log(data);
+    // open socket
+    io.sockets.on("connection", function (socket) {
+      // open a tailable cursor
+      console.log("== open tailable cursor");
+
+       coll.find({}).setCursorOption('numberOfRetries', 10000).addCursorFlag('awaitData', true).addCursorFlag('tailable', true).each(function(err, doc) {
+        console.log(doc);
+        // send message to client
+        socket.emit("data",doc);
+      })
+
     });
-
-});
-
-var dData = function() {
-  return Math.round(Math.random() * 90) + 10;
-};
-
-setInterval(function() {
-
-  var newData;
-  var collection = db.get('data');
-
-  collection.findOne({}, function(e,docs){
-        io.emit('data', docs);
-   });
-
-}, 3000);
+            
+    });
+  });
