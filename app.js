@@ -17,23 +17,43 @@ app.get('/', function(req, res,next) {
 
 server.listen(4200);
 
+var subscribe = function(){
+
+  var args = [].slice.call(arguments);
+  var next = args.pop();
+  var filter = args.shift() || {};
+  
+  if('function' !== typeof next) throw('Callback function not defined');
+  
   // connect to MongoDB
   MongoClient.connect(url, function(err, db){
     
     db.collection('data', function(err, coll) {
 
-    // open socket
-    io.sockets.on("connection", function (socket) {
-      // open a tailable cursor
-      console.log("== open tailable cursor");
-
-       coll.find({}).setCursorOption('numberOfRetries', 10000).addCursorFlag('awaitData', true).addCursorFlag('tailable', true).each(function(err, doc) {
-        console.log(doc);
-        // send message to client
-        socket.emit("data",doc);
-      })
-
+      // seek to latest object
+      var seekCursor = coll.find(filter).limit(1);
+      seekCursor.nextObject(function(err, latest) {
+        if (latest) {
+          filter._id = { $gt: latest._id }
+        }
+        
+        // create stream and listen
+        var stream = coll.find(filter).setCursorOption('numberOfRetries', 10000).addCursorFlag('awaitData', true).addCursorFlag('tailable', true).stream();
+        
+        // call the callback
+        stream.on('data', next);
+      });
     });
-            
-    });
+
   });
+  
+};
+
+// new documents will appear in the console
+// open socket
+io.sockets.on("connection", function (socket) {
+   subscribe( function(document) {
+      console.log(document);
+      socket.emit("data",document);
+   });
+});
