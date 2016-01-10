@@ -31,10 +31,12 @@ var subscribe = function(){
     db.collection('data', function(err, coll) {
 
       // seek to latest object
-      var seekCursor = coll.find(filter).limit(1);
+      var seekCursor = coll.find(filter).limit(1).sort({ _id: -1 });
       seekCursor.nextObject(function(err, latest) {
+
         if (latest) {
           filter._id = { $gt: latest._id }
+          console.log(filter);
         }
         
         // create stream and listen
@@ -53,7 +55,7 @@ var subscribe = function(){
 // open socket
 io.sockets.on("connection", function (socket) {
    subscribe( function(document) {
-      console.log(document);
+      //console.log(document);
       socket.emit("data",document);
    });
 });
