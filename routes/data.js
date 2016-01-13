@@ -13,6 +13,13 @@ router.get('/', function(req, res) {
 
 });
 
+function pad(number) {
+   if (number < 10) {
+        return '0' + number;
+   }
+   return number;
+}
+
 /*
  * POST to add data.
  */
@@ -26,11 +33,12 @@ router.post('/', function(req, res) {
 
     if(moment(newData.date).isValid()){
 
-       var totalWatts = 0;
+       var dD = new Date(newData.date);
+       var searchDate = pad(dD.getDay())+"/"+pad(dD.getMonth() + 1)+"/"+pad(dD.getFullYear());
 
        totals.findOneAndUpdate(
-          {},
-          { $inc: { watts: newData.value } },
+          {day: searchDate},
+          { $set: { day: searchDate }, $inc: { watts: newData.value } },
           {upsert: true, returnOriginal : false},
           function(err, r) {
              if(err == null){

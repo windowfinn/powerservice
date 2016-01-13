@@ -10,6 +10,13 @@ var lineData = {
   }]
 }
 
+function pad(number) {
+   if (number < 10) {
+        return '0' + number;
+   }
+   return number;
+}
+
 var ctx = document.getElementById('canvas').getContext('2d');
 var total  = document.getElementById('total');
 var lineDemo = new Chart(ctx).Line(lineData);
@@ -23,9 +30,10 @@ socket.on('connect', function(data) {
 socket.on('data', function(data) {
    lineDemo.removeData();
 
-   var currentTime = new Date(data.date);
+   var dD = new Date(data.date);
+   var formattedTime = pad(dD.getDay())+"/"+pad(dD.getMonth() + 1)+"/"+pad(dD.getFullYear()) + " " + pad(dD.getHours()) + ":" + pad(dD.getMinutes()) + ":" + pad(dD.getSeconds());
 
-   lineDemo.addData([data.value], currentTime.toDateString() + " " + currentTime.toTimeString());
+   lineDemo.addData([data.value], formattedTime);
    total.innerHTML = data.totalWatts;
    $("#total").fadeIn(100).fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
 });
