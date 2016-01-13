@@ -19,6 +19,7 @@ function pad(number) {
 
 var ctx = document.getElementById('canvas').getContext('2d');
 var total  = document.getElementById('total');
+Chart.defaults.global.responsive = true;
 var lineDemo = new Chart(ctx).Line(lineData);
 
 var socket = io.connect('http://localhost:4200');

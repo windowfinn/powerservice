@@ -6,3 +6,7 @@ body {
 a {
   color: #00B7FF;
 }
+
+.huge {
+    font-size: 40px;
+}
