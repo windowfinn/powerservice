@@ -1,7 +1,8 @@
 var express = require('express');
 
 var app = express();
-var server = require('http').createServer(app);
+var http = require('http');
+var server = http.createServer(app);
 var io = require('socket.io')(server);
 
 var path = require('path');
@@ -12,6 +13,7 @@ var bodyParser = require('body-parser');
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
+var data = require('./routes/data');
 
 // Database
 var mongo = require('mongodb');
@@ -20,11 +22,11 @@ var MongoClient = mongo.MongoClient;
 // Connection URL. This is where your mongodb server is running.
 var url = 'mongodb://localhost:27017/turbineservice';
 
-var db;
+var mDb;
 
 MongoClient.connect(url, function(err, db){
    console.log("Connected to DB");
-   db = db;
+   mDb = db;
 });
 
 //var app = express();
@@ -43,12 +45,13 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Make our db accessible to our router
 app.use(function(req,res,next){
-    req.db = db;
+    req.db = mDb;
     next();
 });
 
 app.use('/', routes);
 app.use('/users', users);
+app.use('/data', data);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -125,5 +128,47 @@ io.sockets.on("connection", function (socket) {
       socket.emit("data",document);
    });
 });
+
+//Code emulating the Arduino posting data
+
+var options = {
+  host: 'localhost',
+  port: '4200',
+  path: '/data',
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json; charset=utf-8',
+//    'Content-Length': data.length
+  }
+};
+
+var dData = function() {
+  return Math.round(Math.random() * 90) + 10;
+};
+
+setInterval(function() {
+
+var req = http.request(options, function(res) {
+  var msg = '';
+
+  res.setEncoding('utf8');
+  res.on('data', function(chunk) {
+    msg += chunk;
+  });
+  res.on('end', function() {
+    console.log(JSON.parse(msg));
+  });
+});
+
+var data = JSON.stringify({
+  'value': dData(),
+  'date': new Date()
+});
+
+options.headers['Content-Length'] = data.length;
+req.write(data);
+req.end();
+
+}, 1000);
 
 module.exports = app;

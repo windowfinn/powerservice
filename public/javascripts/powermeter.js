@@ -11,6 +11,7 @@ var lineData = {
 }
 
 var ctx = document.getElementById('canvas').getContext('2d');
+var total  = document.getElementById('total');
 var lineDemo = new Chart(ctx).Line(lineData);
 
 var socket = io.connect('http://localhost:4200');
@@ -21,5 +22,10 @@ socket.on('connect', function(data) {
 
 socket.on('data', function(data) {
    lineDemo.removeData();
-   lineDemo.addData([data.value], data.date);
+
+   var currentTime = new Date(data.date);
+
+   lineDemo.addData([data.value], currentTime.toDateString() + " " + currentTime.toTimeString());
+   total.innerHTML = data.totalWatts;
+   $("#total").fadeIn(100).fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
 });
