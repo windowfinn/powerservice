@@ -132,7 +132,10 @@ io.sockets.on("connection", function (socket) {
 
    subscribe( socket, function(document) {
       //console.log(document);
-      socket.emit("data",document);
+
+      if(document){
+        socket.emit("data",document);
+      }
    });
 });
 

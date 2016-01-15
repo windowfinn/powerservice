@@ -22,7 +22,7 @@ var total  = document.getElementById('total');
 Chart.defaults.global.responsive = true;
 var lineDemo = new Chart(ctx).Line(lineData);
 
-var socket = io.connect('http://localhost:4200');
+var socket = io.connect(window.location.host);
 
 socket.on('connect', function(data) {
    socket.emit('join', 'Hello World from client');
