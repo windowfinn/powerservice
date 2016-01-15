@@ -29,8 +29,6 @@ MongoClient.connect(url, function(err, db){
    mDb = db;
 });
 
-//var app = express();
-
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
@@ -90,6 +88,7 @@ var subscribe = function(){
 
   var args = [].slice.call(arguments);
   var next = args.pop();
+  var socket = args.shift();
   var filter = args.shift() || {};
 
   if('function' !== typeof next) throw('Callback function not defined');
@@ -113,17 +112,25 @@ var subscribe = function(){
 
         // call the callback
         stream.on('data', next);
+
+        // remove the callback when a client disconnects
+        socket.on('disconnect', function() {
+          console.log("User disconnected!!!!!"); 
+          stream.removeListener('data', next);
+          stream.close(function(err, result){console.log("Stream closed")});
+        });
+
       });
     });
 
   });
-};
+ };
 
-// new documents will appear in the console
 // open socket
 io.sockets.on("connection", function (socket) {
    console.log("Client connected");
-   subscribe( function(document) {
+
+   subscribe( socket, function(document) {
       //console.log(document);
       socket.emit("data",document);
    });
@@ -154,6 +161,9 @@ var req = http.request(options, function(res) {
   res.setEncoding('utf8');
   res.on('data', function(chunk) {
     msg += chunk;
+  });
+  res.on('error', function(err) {
+    console.log(err);
   });
   res.on('end', function() {
     console.log(JSON.parse(msg));

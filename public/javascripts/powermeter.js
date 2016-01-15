@@ -38,3 +38,6 @@ socket.on('data', function(data) {
    total.innerHTML = data.totalWatts;
    $("#total").fadeIn(100).fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
 });
+socket.on('error', function(data) {
+   alert(data);
+});
