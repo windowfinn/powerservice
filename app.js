@@ -131,7 +131,7 @@ io.sockets.on("connection", function (socket) {
    console.log("Client connected");
 
    subscribe( socket, function(document) {
-      //console.log(document);
+      //console.log(">>>>>>>>>>>>>>>>>>>>>>" + document);
 
       if(document){
         socket.emit("data",document);

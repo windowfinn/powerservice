@@ -18,7 +18,9 @@ function pad(number) {
 }
 
 var ctx = document.getElementById('canvas').getContext('2d');
-var total  = document.getElementById('total');
+var total = document.getElementById('total');
+var totalToday = document.getElementById('max');
+var kWHToday = document.getElementById('kWH');
 Chart.defaults.global.responsive = true;
 var lineDemo = new Chart(ctx).Line(lineData);
 
@@ -29,6 +31,7 @@ socket.on('connect', function(data) {
 });
 
 socket.on('data', function(data) {
+   console.log(data); 
    lineDemo.removeData();
 
    var dD = new Date(data.date);
@@ -36,6 +39,8 @@ socket.on('data', function(data) {
 
    lineDemo.addData([data.value], formattedTime);
    total.innerHTML = data.totalWatts;
+   totalToday.innerHTML = data.maxWattsToday;
+   kWHToday.innerHTML = data.kWHToday;
    $("#total").fadeIn(100).fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
 });
 socket.on('error', function(data) {

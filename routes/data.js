@@ -5,9 +5,9 @@ var moment = require('moment');
 /* GET latest data  */
 router.get('/', function(req, res) {
   var db = req.db;
-  var collection = db.collection('data');
+  var data = db.collection('data');
 
-  collection.findOne({}, function(e,docs){
+  data.findOne({}, function(e,docs){
         res.json(docs);
    });
 
@@ -25,7 +25,7 @@ function pad(number) {
  */
 router.post('/', function(req, res) {
     var db = req.db;
-    var collection = db.collection('data');
+    var data = db.collection('data');
     var totals = db.collection('totals');
 
     var newData = req.body;
@@ -34,17 +34,38 @@ router.post('/', function(req, res) {
     if(moment(newData.date).isValid()){
 
        var dD = new Date(newData.date);
-       var searchDate = pad(dD.getDay())+"/"+pad(dD.getMonth() + 1)+"/"+pad(dD.getFullYear());
+
+       //Make the date a Date before inserting into the db
+       newData.date = dD;
+       var searchDate = pad(dD.getFullYear())+"-"+pad(dD.getMonth() + 1)+"-"+pad(dD.getDate());
+   
+       //console.log("Latest value: " + newData.value);
+       //console.log("Latest date: " + newData.date);
+       //console.log("Search date: " + searchDate);
 
        totals.findOneAndUpdate(
-          {day: searchDate},
-          { $set: { day: searchDate }, $inc: { watts: newData.value } },
-          {upsert: true, returnOriginal : false},
+          { day: searchDate },
+          { $set: { day: searchDate }, $inc: { watts: newData.value }, $max: { maxToday: newData.value } },
+          { upsert: true, returnOriginal : false },
           function(err, r) {
              if(err == null){
                newData.totalWatts = r.value.watts;
+               newData.maxWattsToday = r.value.maxToday;
+ 
+               //If sample taken every second, then this value is wattSeconds 
+               var wattSeconds = r.value.watts;
+               var wattHours = wattSeconds/3600;
+               
+               var kWH = wattHours/1000;
 
-               collection.insert(newData, function(err, result){
+               //console.log("totalWatts value: " + r.value.watts);
+               //console.log("wattSeconds value: " + wattSeconds);
+               //console.log("wattHours value: " + wattHours);
+               console.log("kWH value: " + kWH);
+
+               newData.kWHToday = kWH;
+
+               data.insert(newData, function(err, result){
                       res.send(
                           (err === null) ? { msg: 'Date inserted' } : { msg: err }
                       );
@@ -53,6 +74,7 @@ router.post('/', function(req, res) {
              }
           }
        );
+
     } else {
            var err = "Invalid date format - not inserted";
            res.send(
