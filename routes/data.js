@@ -39,13 +39,14 @@ router.post('/', function(req, res) {
        newData.date = dD;
        var searchDate = pad(dD.getFullYear())+"-"+pad(dD.getMonth() + 1)+"-"+pad(dD.getDate());
    
-       //console.log("Latest value: " + newData.value);
+       //console.log("Latest value: " + newData.watts);
+       console.log("Latest value: " + newData.volts);
        //console.log("Latest date: " + newData.date);
        //console.log("Search date: " + searchDate);
 
        totals.findOneAndUpdate(
           { day: searchDate },
-          { $set: { day: searchDate }, $inc: { watts: newData.value }, $max: { maxToday: newData.value } },
+          { $set: { day: searchDate }, $inc: { watts: newData.watts }, $max: { maxToday: newData.watts } },
           { upsert: true, returnOriginal : false },
           function(err, r) {
              if(err == null){

@@ -174,7 +174,8 @@ var req = http.request(options, function(res) {
 });
 
 var data = JSON.stringify({
-  'value': dData(),
+  'watts': dData(),
+  'volts': 240,
   'date': new Date()
 });
 
