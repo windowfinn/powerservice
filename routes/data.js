@@ -34,15 +34,16 @@ router.post('/', function(req, res) {
     if(moment(newData.date).isValid()){
 
        var dD = new Date(newData.date);
+    console.log("dsfdsfdsfsdf", dD);
 
        //Make the date a Date before inserting into the db
        newData.date = dD;
        var searchDate = pad(dD.getFullYear())+"-"+pad(dD.getMonth() + 1)+"-"+pad(dD.getDate());
    
-       //console.log("Latest value: " + newData.watts);
-       console.log("Latest value: " + newData.volts);
-       //console.log("Latest date: " + newData.date);
-       //console.log("Search date: " + searchDate);
+       console.log("Latest watts: " + newData.watts);
+       console.log("Latest volts: " + newData.volts);
+       console.log("Latest date: " + newData.date);
+       console.log("Search date: " + searchDate);
 
        totals.findOneAndUpdate(
           { day: searchDate },
@@ -59,9 +60,9 @@ router.post('/', function(req, res) {
                
                var kWH = wattHours/1000;
 
-               //console.log("totalWatts value: " + r.value.watts);
-               //console.log("wattSeconds value: " + wattSeconds);
-               //console.log("wattHours value: " + wattHours);
+               console.log("totalWatts value: " + r.value.watts);
+               console.log("wattSeconds value: " + wattSeconds);
+               console.log("wattHours value: " + wattHours);
                console.log("kWH value: " + kWH);
 
                newData.kWHToday = kWH;
@@ -72,7 +73,11 @@ router.post('/', function(req, res) {
                       );
                });
 
-             }
+             } else {
+                      res.send(
+                          { msg: err }
+                      );
+	     }
           }
        );
 
