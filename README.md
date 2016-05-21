@@ -4,6 +4,11 @@ Nodejs application for presenting 'live' Watts production from a wind turbine in
 Uses Chart.js dynamic graph to plot the 'live' data received from a socket that is listening to data being added to a Mongo DB 
 tailable cursor.
 
+Note: You must either create the turbineservice.data table as a capped collection, or run the app once, and convert the created table.
+
+i.e.
+db.runCommand( { convertToCapped: 'data', size: 100000 })
+
 app.js has a 'client' which posts random data to the application.
 
 The intention is for an microcontroller that is monitoring the power usage to post json data to the server, which inserts the data
