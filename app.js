@@ -12,15 +12,18 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
 var routes = require('./routes/index');
-var users = require('./routes/users');
 var data = require('./routes/data');
+var common = require('./routes/common');
+
+//Config
+var config = common.config();
 
 // Database
 var mongo = require('mongodb');
 var MongoClient = mongo.MongoClient;
 
 // Connection URL. This is where your mongodb server is running.
-var url = 'mongodb://localhost:27017/turbineservice';
+var url = config.mongodb_url;
 
 var mDb;
 
@@ -48,7 +51,6 @@ app.use(function(req,res,next){
 });
 
 app.use('/', routes);
-app.use('/users', users);
 app.use('/data', data);
 
 // catch 404 and forward to error handler
@@ -136,7 +138,6 @@ io.sockets.on("connection", function (socket) {
   
    //Notify locally connected socket clients
    subscribe( function(document) {
-      //console.log(">>>>>>>>>>>>>>>>>>>>>>" + document);
 
       if(document){
 
@@ -147,16 +148,16 @@ io.sockets.on("connection", function (socket) {
 });
 
 //POST the latest data to the remote server
+if(config.remote_post_address) {
 subscribe( function(document) {
-      //console.log(">>>>>>>>>>>>>>>>>>>>>>" + document);
 
       if(document){
 
         //Post the new data to the remote nodejs app
 	var options = {
-	    host: 'pacevitch.com',
-	    port: 4200,
-	    path: '/data/remote',
+	    host: config.remote_post_address,
+	    port: parseInt(config.remote_post_port),
+	    path: config.remote_post_path,
 	    method: 'POST',
 	    headers: {
                 'Content-Type': 'application/json; charset=utf-8',
@@ -182,13 +183,15 @@ subscribe( function(document) {
         req.end();
       }
 });
+}
 
 //Code emulating the Arduino posting data
 
+if(config.emulate_arduino === 'true') {
 var options = {
-  host: 'localhost',
-  port: '4200',
-  path: '/data',
+  host: config.local_post_address,
+  port: parseInt(config.local_post_port),
+  path: config.local_post_path,
   method: 'POST',
   headers: {
       'Content-Type': 'application/json; charset=utf-8',
@@ -228,5 +231,6 @@ req.write(data);
 req.end();
 
 }, 10000);
+}
 
 module.exports = app;
