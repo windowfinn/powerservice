@@ -1,6 +1,6 @@
 var lineData = {
-  labels: ['', '', '', '',
-           '', '', '', ''],
+  labels: ['', '', '', ''/*,
+           '', '', '', ''*/],
   datasets: [{
     fillColor: "rgba(220,220,220,0.2)",
     strokeColor: "rgba(220,220,220,1)",
@@ -10,7 +10,7 @@ var lineData = {
     pointHighlightStroke: "rgba(220,220,220,1)",
     data: [0, 0, 0, 0,
            0, 0, 0, 0]
-  },
+  }/*,
   {
     fillColor: "rgba(151,187,205,0.2)",
     strokeColor: "rgba(151,187,205,1)",
@@ -20,7 +20,7 @@ var lineData = {
     pointHighlightStroke: "rgba(151,187,205,1)",
     data: [0, 0, 0, 0,
            0, 0, 0, 0]
-  }]
+  }*/]
 }
 
 function pad(number) {
@@ -32,8 +32,10 @@ function pad(number) {
 
 var ctx = document.getElementById('canvas').getContext('2d');
 var total = document.getElementById('total');
-var totalToday = document.getElementById('max');
+//var totalToday = document.getElementById('max');
+var currentWatts = document.getElementById('watts');
 var kWHToday = document.getElementById('kWH');
+var currentVolts = document.getElementById('volts');
 
 Chart.defaults.global.responsive = true;
 var lineDemo = new Chart(ctx).Line(lineData);
@@ -57,10 +59,12 @@ if (kWHFloat < 0.001) {
    data.kWHToday = "< 0.001";  
 }
 
-   lineDemo.addData([data.watts, data.volts], formattedTime);
+   lineDemo.addData([data.watts], formattedTime);
    total.innerHTML = data.totalWatts;
-   totalToday.innerHTML = data.maxWattsToday;
+   //totalToday.innerHTML = data.maxWattsToday;
    kWHToday.innerHTML = data.kWHToday;
+   currentWatts.innerHTML = data.watts;
+   currentVolts.innerHTML = data.volts;
    $("#total").fadeIn(100).fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
 });
 socket.on('error', function(data) {
