@@ -34,7 +34,6 @@ router.post('/', function(req, res) {
     if(moment(newData.date).isValid()){
 
        var dD = new Date(newData.date);
-    console.log("dsfdsfdsfsdf", dD);
 
        //Make the date a Date before inserting into the db
        newData.date = dD;
@@ -80,6 +79,45 @@ router.post('/', function(req, res) {
 	     }
           }
        );
+
+    } else {
+           var err = "Invalid date format - not inserted";
+           res.send(
+               (err === null) ? { msg: '' } : { msg: err }
+           );
+    }
+});
+
+router.post('/remote', function(req, res) {
+    var db = req.db;
+    var data = db.collection('data');
+    var totals = db.collection('totals');
+
+    var newData = req.body;
+    console.log(moment(newData.date).isValid());
+
+    if(moment(newData.date).isValid()){
+
+       var dD = new Date(newData.date);
+
+       //Make the date a Date before inserting into the db
+       newData.date = dD;
+
+       //remove the object _id from the remote db
+       delete newData['_id'];
+
+       console.log("Latest watts: " + newData.watts);
+       console.log("Latest volts: " + newData.volts);
+       console.log("Latest date: " + newData.date);
+       console.log("Latest totalWatts: " + newData.totalWatts);
+       console.log("Latest maxWattsToday: " + newData.maxWattsToday);
+       console.log("kWH Today: " + newData.kWHToday);
+
+       data.insert(newData, function(err, result){
+              res.send(
+                  (err === null) ? { msg: 'Date inserted' } : { msg: err }
+              );
+       });
 
     } else {
            var err = "Invalid date format - not inserted";
