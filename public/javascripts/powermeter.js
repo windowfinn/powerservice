@@ -34,6 +34,7 @@ var ctx = document.getElementById('canvas').getContext('2d');
 var total = document.getElementById('total');
 var totalToday = document.getElementById('max');
 var kWHToday = document.getElementById('kWH');
+
 Chart.defaults.global.responsive = true;
 var lineDemo = new Chart(ctx).Line(lineData);
 
@@ -49,6 +50,12 @@ socket.on('data', function(data) {
 
    var dD = new Date(data.date);
    var formattedTime = pad(dD.getDay())+"/"+pad(dD.getMonth() + 1)+"/"+pad(dD.getFullYear()) + " " + pad(dD.getHours()) + ":" + pad(dD.getMinutes()) + ":" + pad(dD.getSeconds());
+
+   var kWHFloat = parseFloat(data.kWHToday);
+
+if (kWHFloat < 0.001) {
+   data.kWHToday = "< 0.001";  
+}
 
    lineDemo.addData([data.watts, data.volts], formattedTime);
    total.innerHTML = data.totalWatts;
