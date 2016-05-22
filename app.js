@@ -88,7 +88,7 @@ var subscribe = function(){
 
   var args = [].slice.call(arguments);
   var next = args.pop();
-  var socket = args.shift();
+  //var socket = args.shift();
   var filter = args.shift() || {};
 
   if('function' !== typeof next) throw('Callback function not defined');
@@ -114,29 +114,73 @@ var subscribe = function(){
         stream.on('data', next);
 
         // remove the callback when a client disconnects
-        socket.on('disconnect', function() {
+	// is this required as there is only once instance of the stream
+	// being listened to, each client creates it's own stream.
+        /* 
+	socket.on('disconnect', function() {
           console.log("User disconnected!!!!!"); 
           stream.removeListener('data', next);
           stream.close(function(err, result){console.log("Stream closed")});
         });
+	*/
 
       });
     });
 
   });
- };
+};
 
 // open socket
 io.sockets.on("connection", function (socket) {
    console.log("Client connected");
-
-   subscribe( socket, function(document) {
+  
+   //Notify locally connected socket clients
+   subscribe( function(document) {
       //console.log(">>>>>>>>>>>>>>>>>>>>>>" + document);
 
       if(document){
+
+        //Emit the new data to the socket clients
         socket.emit("data",document);
       }
-   });
+    });
+});
+
+//POST the latest data to the remote server
+subscribe( function(document) {
+      //console.log(">>>>>>>>>>>>>>>>>>>>>>" + document);
+
+      if(document){
+
+        //Post the new data to the remote nodejs app
+	var options = {
+	    host: 'pacevitch.com',
+	    port: 4200,
+	    path: '/data/remote',
+	    method: 'POST',
+	    headers: {
+                'Content-Type': 'application/json; charset=utf-8',
+	       // 'Content-Length': Buffer.byteLength(document)
+	    }
+	};
+
+        var req = http.request(options, function(res) {
+	    res.on('data', function (chunk) {
+	        console.log("body: " + chunk);
+	    });
+            res.on('error', function(err) {
+              console.log(err);
+            });
+        });
+
+        req.on('error', function(e) {
+          console.log('problem with request: ' + e.message);
+        });
+ 
+        options.headers['Content-Length'] = document.length;
+        req.write(JSON.stringify(document));
+        req.end();
+      }
 });
 
 //Code emulating the Arduino posting data
@@ -147,8 +191,8 @@ var options = {
   path: '/data',
   method: 'POST',
   headers: {
-    'Content-Type': 'application/json; charset=utf-8',
-//    'Content-Length': data.length
+      'Content-Type': 'application/json; charset=utf-8',
+      //'Content-Length': data.length
   }
 };
 
@@ -158,7 +202,7 @@ var dData = function() {
 
 setInterval(function() {
 
-var req = http.request(options, function(res) {
+  var req = http.request(options, function(res) {
   var msg = '';
 
   res.setEncoding('utf8');
@@ -183,6 +227,6 @@ options.headers['Content-Length'] = data.length;
 req.write(data);
 req.end();
 
-}, 1000);
+}, 10000);
 
 module.exports = app;
