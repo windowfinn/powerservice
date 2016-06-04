@@ -40,3 +40,7 @@ a {
     color: #fff;
     background-color: #d9534f;
 }
+
+.top-buffer {
+    margin-top:20px;
+}

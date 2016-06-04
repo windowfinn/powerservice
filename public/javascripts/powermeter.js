@@ -30,11 +30,26 @@ function pad(number) {
    return number;
 }
 
+function setMeterLevel(number){
+   if(number > 0) {
+//return ((limitMax - limitMin) * (valueIn - baseMin) / (baseMax - baseMin)) + limitMin;
+     var thingy = ((8 - 4) * (number - 0) / (50 - 0)) + 4;
+
+     $('#meter').meter('setLevel', thingy);
+   } else {
+     var thingy = ((4 - 0) * (number + 1) / (0 + 1)) + 0;
+
+     $('#meter').meter('setLevel', thingy);
+   }
+
+}
+
 var ctx = document.getElementById('canvas').getContext('2d');
 var total = document.getElementById('total');
 //var totalToday = document.getElementById('max');
 var currentWatts = document.getElementById('watts');
 var kWHToday = document.getElementById('kWH');
+var kWHTodayLabel = document.getElementById('kWHLabel');
 var currentVolts = document.getElementById('volts');
 
 Chart.defaults.global.responsive = true;
@@ -47,26 +62,63 @@ socket.on('connect', function(data) {
 });
 
 socket.on('data', function(data) {
-   console.log(data); 
+   //console.log(data); 
    lineDemo.removeData();
 
    var dD = new Date(data.date);
-   var formattedTime = pad(dD.getDay())+"/"+pad(dD.getMonth() + 1)+"/"+pad(dD.getFullYear()) + " " + pad(dD.getHours()) + ":" + pad(dD.getMinutes()) + ":" + pad(dD.getSeconds());
+   var formattedTime = pad(dD.getDate())+"/"+pad(dD.getMonth() + 1)+"/"+pad(dD.getFullYear()) + " " + pad(dD.getHours()) + ":" + pad(dD.getMinutes()) + ":" + pad(dD.getSeconds());
 
    var kWHFloat = parseFloat(data.kWHToday);
 
-if (kWHFloat < 0.001) {
-   data.kWHToday = "< 0.001";  
-}
+   if (kWHFloat < 0.001) { 
+      data.kWHToday = "< 0.001";
+      kWHTodayLabel.innerHTML = "kWH Today";
+   } else if(kWHFloat < 0.1) { 
+      kWHFloat = kWHFloat * 1000;
+      kWHTodayLabel.innerHTML = "wH Today";
+   } else {
+      kWHTodayLabel.innerHTML = "kWH Today";
+   }
 
    lineDemo.addData([data.watts], formattedTime);
-   total.innerHTML = data.totalWatts;
+   total.innerHTML = parseFloat(data.totalWatts).toFixed(2);
    //totalToday.innerHTML = data.maxWattsToday;
-   kWHToday.innerHTML = data.kWHToday;
-   currentWatts.innerHTML = data.watts;
-   currentVolts.innerHTML = data.volts;
+   kWHToday.innerHTML = kWHFloat.toFixed(2);
+   currentWatts.innerHTML = parseFloat(data.watts).toFixed(2);
+   currentVolts.innerHTML = parseFloat(data.volts).toFixed(2);
    $("#total").fadeIn(100).fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
+
+   setMeterLevel(parseFloat(data.watts));
 });
+
 socket.on('error', function(data) {
    alert(data);
+});
+
+$('#meter').meter();
+
+$(document).ready(function(){ 
+    setInterval(function(){ 
+      var level = $('#meter').meter('getLevel');
+      if (level != 4) {
+        if(level < 4) {
+          
+	  level = level+0.1;
+
+	  if(level > 4) {
+	    level = 4;
+	  }
+
+	} else {
+
+	  level = level-0.1;
+
+	  if(level < 4) {
+	    level = 4;
+	  }
+
+	}
+       $('#meter').meter('setLevel', level);
+      }
+    },200); 
 });
